@@ -2,6 +2,7 @@ import os
 import pandas
 import numpy as np
 from datetime import datetime, timedelta
+from sklearn.model_selection import StratifiedShuffleSplit
 
 DATE_FORMAT = "%Y-%m-%d"
 MIN_DATE = datetime.strptime("2011-05-11", DATE_FORMAT)
@@ -31,6 +32,20 @@ def load_data(order_data_path, label_data_path):
         customer_info[customer_id]["label"] = label
 
     return customer_info
+
+def get_train_val_split(x, y, val_split=0.1, n_splits=10):
+    assert val_split <= 1, "Validation split rate cannot be greater than 1"
+
+    split_list = []
+    train_val_split = StratifiedShuffleSplit(n_splits=n_splits, test_size=val_split, random_state=13)
+
+    # Balanced train/val split so that returning customers are evenly (almost) distributed between splits
+    for i_train, i_val in train_val_split.split(x, y):
+        x_train, x_val = x[i_train], x[i_val]
+        y_train, y_val = y[i_train], y[i_val]
+        split_list.append(((x_train, y_train), (x_val, y_val)))
+
+    return split_list
 
 def get_RFM_data(customer_info, final_test=False):
     """

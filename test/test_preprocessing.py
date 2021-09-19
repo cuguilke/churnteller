@@ -1,7 +1,8 @@
 import os
 import unittest
+import numpy as np
 
-from preprocessing import load_data, get_RFM_data
+from preprocessing import load_data, get_train_val_split, get_RFM_data
 
 class TestPreprocessing(unittest.TestCase):
     def test_load_data(self):
@@ -16,6 +17,24 @@ class TestPreprocessing(unittest.TestCase):
         customer_info = load_data(order_data_path, label_data_path)
         for customer in customer_info:
             self.assertIsNotNone(customer_info[customer]["label"])
+
+    def test_get_train_val_split(self):
+        dummy_x = np.arange(10)
+        dummy_y = np.array([1, 1, 0, 0 ,0 ,0 ,0 ,0, 0, 0])
+
+        (x_train, y_train), (x_val, y_val) = get_train_val_split(dummy_x, dummy_y, val_split=0.5, n_splits=1)[0]
+
+        train_has_1 = False
+        for y in y_train:
+            if y == 1:
+                train_has_1 = True
+
+        val_has_1 = False
+        for y in y_val:
+            if y == 1:
+                val_has_1 = True
+
+        self.assertTrue(train_has_1 and val_has_1, msg="Train/val split inbalance!")
 
     def test_get_RFM_data(self):
         dummy_customer_info = {
