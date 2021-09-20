@@ -2,14 +2,14 @@ import os
 import json
 import warnings
 
-def get_parameters(model_name, use_best=True):
+def get_parameters(model, features, use_best=True, path="parameters.json"):
     parameter_dict = None
 
     if use_best:
-        assert os.path.exists("params.config"), "Please run the program again with the keyword '--grid_search'"
+        assert os.path.exists(path), "Please run the program again with the keyword '--grid_search'"
 
     else:
-        if model_name == "xgboost":
+        if model == "xgboost":
             parameter_dict = {
                 "max_depth": range(2, 10, 3),
                 "n_estimators": range(60, 220, 40),
@@ -18,7 +18,9 @@ def get_parameters(model_name, use_best=True):
 
     return parameter_dict
 
-def save_parameters(model_name, parameter_dict, path="parameters.json"):
+def save_parameters(model, features, parameter_dict, path="parameters.json"):
+    model_name = "%s:%s" % (model, features)
+
     # Load the previous records if exist
     hist_cache = {}
     if os.path.isfile(path):

@@ -36,7 +36,7 @@ if __name__ == '__main__':
     # Prepare the classifier
     if model == "xgboost":
         estimator = xgboost.XGBClassifier(objective="binary:logistic", seed=13, use_label_encoder=False, eval_metric="logloss")
-        parameters = get_parameters(model, use_best=not do_grid_search)
+        parameters = get_parameters(model, features, use_best=not do_grid_search, path=parameter_path)
 
     else:
         raise ValueError("%s is not a supported model" % model)
@@ -46,14 +46,14 @@ if __name__ == '__main__':
         grid_search = GridSearchCV(estimator=estimator,
                                    param_grid=parameters,
                                    scoring="roc_auc",
-                                   cv=2,
+                                   cv=10,
                                    verbose=True)
 
         # Start hyperparameter search
         grid_search.fit(x, y)
 
         # Save the best params
-        save_parameters(model, grid_search.best_params_, path=parameter_path)
+        save_parameters(model, features, grid_search.best_params_, path=parameter_path)
 
     else:
         pass
