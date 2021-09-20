@@ -53,6 +53,5 @@ class TestPreprocessing(unittest.TestCase):
         self.assertEqual(x.shape[0], y.shape[0], msg="Input - output mismatch!")
         self.assertTrue(x.shape[1] == 3)
 
-
 if __name__ == '__main__':
     unittest.main()
