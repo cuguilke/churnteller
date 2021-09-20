@@ -11,6 +11,11 @@ class TestModels(unittest.TestCase):
         self.assertIn("n_estimators", parameters)
         self.assertIn("learning_rate", parameters)
 
+        parameters = get_parameters("svm", "RFM", use_best=False)
+        self.assertIn("C", parameters)
+        self.assertIn("gamma", parameters)
+        self.assertIn("kernel", parameters)
+
     def test_save_parameters(self):
         dummy_parameter_dict = {'learning_rate': 0.1, 'max_depth': 2, 'n_estimators': 100}
 

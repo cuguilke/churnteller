@@ -16,6 +16,13 @@ def get_parameters(model, features, use_best=True, path="parameters.json"):
                 "learning_rate": [0.1, 0.01, 0.001]
             }
 
+        elif model == "svm":
+            parameter_dict = {
+                "C": [0.1, 1, 10],
+                "gamma": [1, 0.1, 0.01, 0.001, 0.0001],
+                "kernel": ["linear", "rbf"]
+            }
+
     return parameter_dict
 
 def save_parameters(model, features, parameter_dict, path="parameters.json"):
