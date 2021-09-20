@@ -11,6 +11,7 @@ if __name__ == '__main__':
     parser.add_argument("--features", default="RFM", help="supported features for churn prediction: (1) RFM")
     parser.add_argument("--order_data_path", default="./data/machine_learning_challenge_order_data.csv.gz")
     parser.add_argument("--label_data_path", default="./data/machine_learning_challenge_labeled_data.csv.gz")
+    parser.add_argument("--parameter_path", default="parameters.json")
     parser.add_argument("--grid_search", action="store_true", help="use this command to run grid search, else the best config will be used for testing")
 
     # Config
@@ -19,6 +20,7 @@ if __name__ == '__main__':
     features = args["features"]
     order_data_path = args["order_data_path"]
     label_data_path = args["label_data_path"]
+    parameter_path = args["parameter_path"]
     do_grid_search = args["grid_search"]
 
     # Load customer data
@@ -26,12 +28,12 @@ if __name__ == '__main__':
 
     # Feature extraction
     if features == "RFM":
-        x, y = get_RFM_data(customer_info)
+        x, y = get_RFM_data(customer_info, final_test=not do_grid_search)
 
     else:
         raise ValueError("%s is not a supported feature" % features)
 
-    # Prepare XGBoost classifier
+    # Prepare the classifier
     if model == "xgboost":
         estimator = xgboost.XGBClassifier(objective="binary:logistic", seed=13, use_label_encoder=False, eval_metric="logloss")
         parameters = get_parameters(model, use_best=not do_grid_search)
@@ -44,13 +46,14 @@ if __name__ == '__main__':
         grid_search = GridSearchCV(estimator=estimator,
                                    param_grid=parameters,
                                    scoring="roc_auc",
-                                   cv=10,
+                                   cv=2,
                                    verbose=True)
 
         # Start hyperparameter search
         grid_search.fit(x, y)
 
-        print(grid_search.best_estimator_)
+        # Save the best params
+        save_parameters(model, grid_search.best_params_, path=parameter_path)
 
     else:
         pass
