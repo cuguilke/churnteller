@@ -8,6 +8,17 @@ def get_parameters(model, features, use_best=True, path="parameters.json"):
     if use_best:
         assert os.path.exists(path), "Please run the program again with the keyword '--grid_search'"
 
+        # Load stored (best performing) parameters for the selected model:features duo
+        parameter_cache = {}
+        if os.path.isfile(path):
+            with open(path, "r") as param_file:
+                parameter_cache = json.load(param_file)
+
+        model_key = "%s:%s" % (model, features)
+        assert model_key in parameter_cache, "Parameter config is not found for %s" % model_key
+
+        parameter_dict = parameter_cache[model_key]
+
     else:
         if model == "xgboost":
             parameter_dict = {
