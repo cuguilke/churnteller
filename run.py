@@ -37,7 +37,7 @@ if __name__ == '__main__':
 
     # Feature extraction
     if features == "RFM":
-        x, y = get_RFM_data(customer_info, final_test=not do_grid_search)
+        x, y, x_test, y_test = get_RFM_data(customer_info, final_test=not do_grid_search)
 
     else:
         raise ValueError("%s is not a supported feature" % features)
@@ -65,6 +65,7 @@ if __name__ == '__main__':
                                    n_jobs=2,
                                    cv=10,
                                    verbose=True)
+        log("Grid search is initialized...")
 
         # Start hyperparameter search
         grid_search.fit(x, y)
@@ -75,4 +76,12 @@ if __name__ == '__main__':
         log("The best performing parameters are saved.")
 
     else:
-        pass
+        estimator.set_params(**parameters)
+        log("The parameter storage is used to load the best performing setting...")
+
+        log("Training starts...")
+        estimator.fit(x, y)
+        log("Model training is completed.")
+
+        
+

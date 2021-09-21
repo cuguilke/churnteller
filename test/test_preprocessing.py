@@ -49,9 +49,15 @@ class TestPreprocessing(unittest.TestCase):
             "198b8b884a5b": {'label': 1, 'data': [{'order_date': '2015-09-13', 'order_hour': 20, 'customer_order_rank': 1.0, 'is_failed': 0, 'voucher_amount': 0.0, 'delivery_fee': 0.0, 'amount_paid': 8.496, 'restaurant_id': 187233498, 'city_id': 72358, 'payment_id': 1779, 'platform_id': 30231, 'transmission_id': 4324}, {'order_date': '2015-09-27', 'order_hour': 19, 'customer_order_rank': 2.0, 'is_failed': 0, 'voucher_amount': 0.0, 'delivery_fee': 0.0, 'amount_paid': 11.151, 'restaurant_id': 187233498, 'city_id': 72358, 'payment_id': 1779, 'platform_id': 29463, 'transmission_id': 4356}, {'order_date': '2015-10-28', 'order_hour': 17, 'customer_order_rank': 3.0, 'is_failed': 0, 'voucher_amount': 0.0, 'delivery_fee': 0.0, 'amount_paid': 11.151, 'restaurant_id': 187233498, 'city_id': 72358, 'payment_id': 1779, 'platform_id': 30231, 'transmission_id': 4356}]}
         }
 
-        x, y = get_RFM_data(dummy_customer_info)
+        x, y, _, _ = get_RFM_data(dummy_customer_info)
         self.assertEqual(x.shape[0], y.shape[0], msg="Input - output mismatch!")
         self.assertTrue(x.shape[1] == 3)
+
+        x, y, x_test, y_test = get_RFM_data(dummy_customer_info, final_test=True)
+        self.assertEqual(x.shape[0], y.shape[0], msg="Input - output mismatch!")
+        self.assertTrue(x.shape[1] == 3)
+        self.assertEqual(x_test.shape[0], y_test.shape[0], msg="Test input - test output mismatch!")
+        self.assertTrue(x_test.shape[1] == 3)
 
 if __name__ == '__main__':
     unittest.main()

@@ -59,6 +59,35 @@ def get_RFM_data(customer_info, final_test=False):
     x = []
     y = []
 
+    # Use the last 6 months for cross-validation
+    threshold_date = LAST_DATE - timedelta(days=180)
+
+    for customer in customer_info:
+        temp = []
+        last_order_date = MIN_DATE
+        for entry in customer_info[customer]["data"]:
+            new_label = 0
+
+            order_date = datetime.strptime(entry["order_date"], DATE_FORMAT)
+            if order_date <= threshold_date:
+                if entry["is_failed"] == 0:
+                    temp.append(entry["amount_paid"])
+                    last_order_date = max(last_order_date, order_date)
+
+            else:
+                new_label = 1
+
+        # Eliminate customers that made their first order in the last 6 months
+        if last_order_date > MIN_DATE:
+            x.append([(threshold_date - last_order_date).days, sum(temp), len(temp)])
+            y.append(new_label)
+
+    # List to numpy array
+    x = np.array(x).astype("float32")
+    y = np.array(y)
+
+    x_test = []
+    y_test = []
     if final_test:
         for customer in customer_info:
             temp = []
@@ -70,38 +99,13 @@ def get_RFM_data(customer_info, final_test=False):
                     temp.append(entry["amount_paid"])
                     last_order_date = max(last_order_date, order_date)
 
-            x.append([(LAST_DATE - last_order_date).days, sum(temp), len(temp)])
-            y.append(customer_info[customer]["label"])
+            x_test.append([(LAST_DATE - last_order_date).days, sum(temp), len(temp)])
+            y_test.append(customer_info[customer]["label"])
 
-    else:
-        # Use the last 6 months for cross-validation
-        threshold_date = LAST_DATE - timedelta(days=180)
+        x_test = np.array(x_test).astype("float32")
+        y_test = np.array(y_test)
 
-        for customer in customer_info:
-            temp = []
-            last_order_date = MIN_DATE
-            for entry in customer_info[customer]["data"]:
-                new_label = 0
-
-                order_date = datetime.strptime(entry["order_date"], DATE_FORMAT)
-                if order_date <= threshold_date:
-                    if entry["is_failed"] == 0:
-                        temp.append(entry["amount_paid"])
-                        last_order_date = max(last_order_date, order_date)
-
-                else:
-                    new_label = 1
-
-            # Eliminate customers that made their first order in the last 6 months
-            if last_order_date > MIN_DATE:
-                x.append([(threshold_date - last_order_date).days, sum(temp), len(temp)])
-                y.append(new_label)
-
-    # List to numpy array
-    x = np.array(x).astype("float32")
-    y = np.array(y)
-
-    return x, y
+    return x, y, x_test, y_test
 
 
 
