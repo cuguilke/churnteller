@@ -5,6 +5,7 @@ from models import *
 from preprocessing import *
 from sklearn.svm import SVC
 from sklearn.model_selection import GridSearchCV
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 
 if __name__ == '__main__':
     # Dynamic parameters
@@ -83,5 +84,9 @@ if __name__ == '__main__':
         estimator.fit(x, y)
         log("Model training is completed.")
 
-        
-
+        y_pred = estimator.predict(x_test)
+        acc = accuracy_score(y_test, y_pred)
+        recall = recall_score(y_test, y_pred)
+        precision = precision_score(y_test, y_pred)
+        f1_score = f1_score(y_test, y_pred)
+        log("%s test acc: %.2f, recall: %.2f, precision: %.2f, f1 score: %.2f" % (model, acc, recall, precision, f1_score))
