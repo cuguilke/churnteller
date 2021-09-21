@@ -1,6 +1,7 @@
 import os
 import json
 import warnings
+from tools import log
 
 def get_parameters(model, features, use_best=True, path="parameters.json"):
     parameter_dict = None
@@ -19,6 +20,8 @@ def get_parameters(model, features, use_best=True, path="parameters.json"):
 
         parameter_dict = parameter_cache[model_key]
 
+        log("The parameter storage is used to load the best performing setting...")
+
     else:
         if model == "xgboost":
             parameter_dict = {
@@ -33,6 +36,8 @@ def get_parameters(model, features, use_best=True, path="parameters.json"):
                 "gamma": [1, 0.1, 0.01, 0.001, 0.0001],
                 "kernel": ["linear", "rbf"]
             }
+
+        log("Grid search is initialized...")
 
     return parameter_dict
 

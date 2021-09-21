@@ -1,5 +1,6 @@
 import xgboost
 import argparse
+from tools import *
 from models import *
 from preprocessing import *
 from sklearn.svm import SVC
@@ -14,6 +15,7 @@ if __name__ == '__main__':
     parser.add_argument("--label_data_path", default="./data/machine_learning_challenge_labeled_data.csv.gz")
     parser.add_argument("--parameter_path", default="parameters.json")
     parser.add_argument("--grid_search", action="store_true", help="use this command to run grid search, else the best config will be used for testing")
+    parser.add_argument("--print_config", action="store_true")
 
     # Config
     args = vars(parser.parse_args())
@@ -23,9 +25,15 @@ if __name__ == '__main__':
     label_data_path = args["label_data_path"]
     parameter_path = args["parameter_path"]
     do_grid_search = args["grid_search"]
+    print_config = args["print_config"]
+
+    # Print out the active configuration
+    if print_config:
+        log_config(args)
 
     # Load customer data
     customer_info = load_data(order_data_path, label_data_path)
+    log("Customer info is loaded...")
 
     # Feature extraction
     if features == "RFM":
@@ -33,6 +41,7 @@ if __name__ == '__main__':
 
     else:
         raise ValueError("%s is not a supported feature" % features)
+    log("Customer data is prepared...")
 
     # Prepare the classifier
     if model == "xgboost":
@@ -43,6 +52,7 @@ if __name__ == '__main__':
 
     else:
         raise ValueError("%s is not a supported model" % model)
+    log("Model is initialized...")
 
     # Get parameters (best | grid search)
     parameters = get_parameters(model, features, use_best=not do_grid_search, path=parameter_path)
@@ -58,9 +68,11 @@ if __name__ == '__main__':
 
         # Start hyperparameter search
         grid_search.fit(x, y)
+        log("Grid search is completed...")
 
         # Save the best params
         save_parameters(model, features, grid_search.best_params_, path=parameter_path)
+        log("The best performing parameters are saved.")
 
     else:
         pass
