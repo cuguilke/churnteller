@@ -77,16 +77,24 @@ if __name__ == '__main__':
         log("The best performing parameters are saved.")
 
     else:
+        # Set the recorded best parameters
         estimator.set_params(**parameters)
         log("The parameter storage is used to load the best performing setting...")
 
+        # Training
         log("Training starts...")
         estimator.fit(x, y)
         log("Model training is completed.")
 
+        # Testing
         y_pred = estimator.predict(x_test)
         acc = accuracy_score(y_test, y_pred)
         recall = recall_score(y_test, y_pred)
         precision = precision_score(y_test, y_pred)
         f1_score = f1_score(y_test, y_pred)
         log("%s test acc: %.2f, recall: %.2f, precision: %.2f, f1 score: %.2f" % (model, acc, recall, precision, f1_score))
+        log("Customer churn rate: %.2f" % get_customer_churn_rate(y_test))
+
+        # Record experiment results
+        record_results(model, features, {"acc": acc, "recall": recall, "precision": precision, "f1_score": f1_score})
+        log("Empirical results are recorded.")

@@ -2,7 +2,7 @@ import os
 import unittest
 import numpy as np
 
-from preprocessing import load_data, get_train_val_split, get_RFM_data
+from preprocessing import load_data, get_train_val_split, get_customer_churn_rate, get_RFM_data
 
 class TestPreprocessing(unittest.TestCase):
     def test_load_data(self):
@@ -35,6 +35,11 @@ class TestPreprocessing(unittest.TestCase):
                 val_has_1 = True
 
         self.assertTrue(train_has_1 and val_has_1, msg="Train/val split inbalance!")
+
+    def test_get_customer_churn_rate(self):
+        y = np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 1])
+
+        self.assertEquals(get_customer_churn_rate(y), 0.1)
 
     def test_get_RFM_data(self):
         dummy_customer_info = {

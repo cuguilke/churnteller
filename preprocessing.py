@@ -29,7 +29,7 @@ def load_data(order_data_path, label_data_path):
         label = entry["is_returning_customer"]
 
         assert customer_id in customer_info, "Missing customer in order data!"
-        customer_info[customer_id]["label"] = label
+        customer_info[customer_id]["label"] = 0 if label == 1 else 1
 
     return customer_info
 
@@ -46,6 +46,9 @@ def get_train_val_split(x, y, val_split=0.1, n_splits=10):
         split_list.append(((x_train, y_train), (x_val, y_val)))
 
     return split_list
+
+def get_customer_churn_rate(y):
+    return 1. - (np.sum(y) / y.shape[0])
 
 def get_RFM_data(customer_info, final_test=False):
     """
@@ -66,7 +69,7 @@ def get_RFM_data(customer_info, final_test=False):
         temp = []
         last_order_date = MIN_DATE
         for entry in customer_info[customer]["data"]:
-            new_label = 0
+            new_label = 1
 
             order_date = datetime.strptime(entry["order_date"], DATE_FORMAT)
             if order_date <= threshold_date:
@@ -75,7 +78,7 @@ def get_RFM_data(customer_info, final_test=False):
                     last_order_date = max(last_order_date, order_date)
 
             else:
-                new_label = 1
+                new_label = 0
 
         # Eliminate customers that made their first order in the last 6 months
         if last_order_date > MIN_DATE:

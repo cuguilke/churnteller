@@ -29,8 +29,8 @@ def get_parameters(model, features, use_best=True, path="parameters.json"):
 
         elif model == "svm":
             parameter_dict = {
-                "C": [0.1, 1, 10],
-                "gamma": [1, 0.1, 0.01, 0.001, 0.0001],
+                "C": [1],
+                "gamma": ["auto"],
                 "kernel": ["linear", "rbf"]
             }
 
