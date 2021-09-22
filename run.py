@@ -4,6 +4,7 @@ from tools import *
 from models import *
 from preprocessing import *
 from sklearn.svm import SVC
+from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import GridSearchCV
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 
@@ -15,6 +16,7 @@ if __name__ == '__main__':
     parser.add_argument("--order_data_path", default="./data/machine_learning_challenge_order_data.csv.gz")
     parser.add_argument("--label_data_path", default="./data/machine_learning_challenge_labeled_data.csv.gz")
     parser.add_argument("--parameter_path", default="parameters.json")
+    parser.add_argument("--normalize", action="store_true", help="enables feature normalization before training")
     parser.add_argument("--grid_search", action="store_true", help="use this command to run grid search, else the best config will be used for testing")
     parser.add_argument("--print_config", action="store_true")
 
@@ -25,6 +27,7 @@ if __name__ == '__main__':
     order_data_path = args["order_data_path"]
     label_data_path = args["label_data_path"]
     parameter_path = args["parameter_path"]
+    do_normalize = args["normalize"]
     do_grid_search = args["grid_search"]
     print_config = args["print_config"]
 
@@ -47,6 +50,12 @@ if __name__ == '__main__':
         raise ValueError("%s is not a supported feature" % features)
     log("Customer data is prepared...")
 
+    # Feature normalization
+    if do_normalize:
+        scaler = StandardScaler()
+        x = scaler.fit_transform(x)
+        x_test = x_test if type(x_test) is list else scaler.fit_transform(x_test)
+
     # Prepare the classifier
     if model == "xgboost":
         estimator = xgboost.XGBClassifier(objective="binary:logistic", seed=13, use_label_encoder=False, eval_metric="logloss")
@@ -59,7 +68,7 @@ if __name__ == '__main__':
     log("Model is initialized...")
 
     # Get parameters (best | grid search)
-    parameters = get_parameters(model, features, use_best=not do_grid_search, path=parameter_path)
+    parameters = get_parameters(model, features, do_normalize, use_best=not do_grid_search, path=parameter_path)
 
     if do_grid_search:
         # Grid search for the hyperparameters
@@ -76,7 +85,7 @@ if __name__ == '__main__':
         log("Grid search is completed...")
 
         # Save the best params
-        save_parameters(model, features, grid_search.best_params_, path=parameter_path)
+        save_parameters(model, features, do_normalize, grid_search.best_params_, path=parameter_path)
         log("The best performing parameters are saved.")
 
     else:
@@ -99,5 +108,5 @@ if __name__ == '__main__':
         log("Customer churn rate: %.2f" % get_customer_churn_rate(y_test))
 
         # Record experiment results
-        record_results(model, features, {"acc": acc, "recall": recall, "precision": precision, "f1_score": f1_score})
+        record_results(model, features, do_normalize, {"acc": acc, "recall": recall, "precision": precision, "f1_score": f1_score})
         log("Empirical results are recorded.")

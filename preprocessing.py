@@ -1,7 +1,6 @@
 import os
 import pandas
 import numpy as np
-from tools import normalize
 from datetime import datetime, timedelta
 from sklearn.model_selection import StratifiedShuffleSplit
 
@@ -163,9 +162,9 @@ def get_custom_data(customer_info, final_test=False):
         # Eliminate customers that made their first order in the last 6 months
         if last_order_date > MIN_DATE:
             feature_vector = [(threshold_date - last_order_date).days, sum(temp), len(temp), total_voucher]
-            feature_vector.extend(normalize(payment_freq))
-            feature_vector.extend(normalize(platform_freq))
-            feature_vector.extend(normalize(tranmission_freq))
+            feature_vector.extend(payment_freq)
+            feature_vector.extend(platform_freq)
+            feature_vector.extend(tranmission_freq)
             x.append(feature_vector)
             y.append(new_label)
 
@@ -196,12 +195,14 @@ def get_custom_data(customer_info, final_test=False):
                     tranmission_freq[transmission_IDs[entry["transmission_id"]]] += 1
                     last_order_date = max(last_order_date, order_date)
 
-            feature_vector = [(LAST_DATE - last_order_date).days, sum(temp), len(temp), total_voucher]
-            feature_vector.extend(normalize(payment_freq))
-            feature_vector.extend(normalize(platform_freq))
-            feature_vector.extend(normalize(tranmission_freq))
-            x_test.append(feature_vector)
-            y_test.append(customer_info[customer]["label"])
+            # Eliminate customers that only have failed orders
+            if last_order_date > MIN_DATE:
+                feature_vector = [(LAST_DATE - last_order_date).days, sum(temp), len(temp), total_voucher]
+                feature_vector.extend(payment_freq)
+                feature_vector.extend(platform_freq)
+                feature_vector.extend(tranmission_freq)
+                x_test.append(feature_vector)
+                y_test.append(customer_info[customer]["label"])
 
         x_test = np.array(x_test).astype("float32")
         y_test = np.array(y_test)

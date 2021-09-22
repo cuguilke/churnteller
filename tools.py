@@ -39,9 +39,10 @@ def log_config(config):
             temp += " "
         log("%s%s: %s" % (key, temp, config[key]))
 
-def record_results(model, features, result_dict, path="results.json"):
+def record_results(model, features, normalized, result_dict, path="results.json"):
     if result_dict is not None:
         model_name = "%s:%s" % (model, features)
+        model_name = "%s:%s" % (model_name, "normalized") if normalized else model_name
 
         # Load the previous records if exist
         hist_cache = {}

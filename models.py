@@ -2,7 +2,7 @@ import os
 import json
 import warnings
 
-def get_parameters(model, features, use_best=True, path="parameters.json"):
+def get_parameters(model, features, normalized, use_best=True, path="parameters.json"):
     parameter_dict = None
 
     if use_best:
@@ -15,6 +15,7 @@ def get_parameters(model, features, use_best=True, path="parameters.json"):
                 parameter_cache = json.load(param_file)
 
         model_key = "%s:%s" % (model, features)
+        model_key = "%s:%s" % (model_key, "normalized") if normalized else model_key
         assert model_key in parameter_cache, "Parameter config is not found for %s" % model_key
 
         parameter_dict = parameter_cache[model_key]
@@ -31,13 +32,15 @@ def get_parameters(model, features, use_best=True, path="parameters.json"):
             parameter_dict = {
                 "C": [1],
                 "gamma": ["auto"],
-                "kernel": ["linear", "rbf"]
+                "kernel": ["linear", "rbf"],
+                "max_iter": [100]
             }
 
     return parameter_dict
 
-def save_parameters(model, features, parameter_dict, path="parameters.json"):
+def save_parameters(model, features, normalized, parameter_dict, path="parameters.json"):
     model_name = "%s:%s" % (model, features)
+    model_name = "%s:%s" % (model_name, "normalized") if normalized else model_name
 
     # Load the previous records if exist
     hist_cache = {}
