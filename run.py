@@ -11,7 +11,7 @@ if __name__ == '__main__':
     # Dynamic parameters
     parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter)
     parser.add_argument("--model", default="xgboost", help="supported models: (1) xgboost, (2) svm")
-    parser.add_argument("--features", default="RFM", help="supported features for churn prediction: (1) RFM")
+    parser.add_argument("--features", default="RFM", help="supported features for churn prediction: (1) RFM, (2) custom")
     parser.add_argument("--order_data_path", default="./data/machine_learning_challenge_order_data.csv.gz")
     parser.add_argument("--label_data_path", default="./data/machine_learning_challenge_labeled_data.csv.gz")
     parser.add_argument("--parameter_path", default="parameters.json")
@@ -39,6 +39,9 @@ if __name__ == '__main__':
     # Feature extraction
     if features == "RFM":
         x, y, x_test, y_test = get_RFM_data(customer_info, final_test=not do_grid_search)
+
+    elif features == "custom":
+        x, y, x_test, y_test = get_custom_data(customer_info, final_test=not do_grid_search)
 
     else:
         raise ValueError("%s is not a supported feature" % features)
@@ -92,7 +95,7 @@ if __name__ == '__main__':
         recall = recall_score(y_test, y_pred)
         precision = precision_score(y_test, y_pred)
         f1_score = f1_score(y_test, y_pred)
-        log("%s test acc: %.2f, recall: %.2f, precision: %.2f, f1 score: %.2f" % (model, acc, recall, precision, f1_score))
+        log("%s:%s test acc: %.2f, recall: %.2f, precision: %.2f, f1 score: %.2f" % (model, features, acc, recall, precision, f1_score))
         log("Customer churn rate: %.2f" % get_customer_churn_rate(y_test))
 
         # Record experiment results

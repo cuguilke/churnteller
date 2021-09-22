@@ -4,6 +4,8 @@ import logging
 from enum import Enum
 from time import localtime, strftime
 
+logging.basicConfig(filename="run.log", filemode="a", format="%(message)s", level=logging.INFO)
+
 def get_time():
     return "[%s]" % strftime("%a, %d %b %Y %X", localtime())
 
@@ -49,10 +51,13 @@ def record_results(model, features, result_dict, path="results.json"):
 
         # Record new results
         if model_name in hist_cache:
-            hist_cache[model_name].append(result_dict[model_name])
+            hist_cache[model_name].append(result_dict)
         else:
-            hist_cache[model_name] = [result_dict[model_name]]
+            hist_cache[model_name] = [result_dict]
 
         # Save the updated records
         with open(path, "w+") as hist_file:
             json.dump(hist_cache, hist_file)
+
+def normalize(vector):
+    return [float(i) / sum(vector) for i in vector]
