@@ -6,7 +6,6 @@ from preprocessing import load_data, get_train_val_split, get_customer_churn_rat
 
 class TestPreprocessing(unittest.TestCase):
     def test_load_data(self):
-        return True
         ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 
         order_data_path = "./data/machine_learning_challenge_order_data.csv.gz"

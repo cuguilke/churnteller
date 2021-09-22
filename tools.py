@@ -4,7 +4,7 @@ import logging
 from enum import Enum
 from time import localtime, strftime
 
-logging.basicConfig(filename="run.log", filemode="a", format="%(message)s", level=logging.INFO)
+logging.basicConfig(filename=os.path.join(os.path.dirname(os.path.abspath(__file__)), "run.log"), filemode="a", format="%(message)s", level=logging.INFO)
 
 def get_time():
     return "[%s]" % strftime("%a, %d %b %Y %X", localtime())
