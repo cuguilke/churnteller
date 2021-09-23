@@ -33,7 +33,7 @@ def get_parameters(model, features, normalized, use_best=True, path="parameters.
                 "C": [1],
                 "gamma": ["auto"],
                 "kernel": ["linear", "rbf"],
-                "max_iter": [100]
+                "max_iter": [10000]
             }
 
     return parameter_dict
