@@ -48,7 +48,7 @@ def get_train_val_split(x, y, val_split=0.1, n_splits=10):
     return split_list
 
 def get_customer_churn_rate(y):
-    return 1. - (np.sum(y) / y.shape[0])
+    return np.sum(y) / y.shape[0]
 
 def get_RFM_data(customer_info, final_test=False):
     """
