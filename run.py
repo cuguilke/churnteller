@@ -55,6 +55,7 @@ if __name__ == '__main__':
         scaler = StandardScaler()
         x = scaler.fit_transform(x)
         x_test = x_test if type(x_test) is list else scaler.fit_transform(x_test)
+        log("Features are normalized...")
 
     # Prepare the classifier
     if model == "xgboost":
