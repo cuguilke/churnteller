@@ -39,7 +39,7 @@ class TestPreprocessing(unittest.TestCase):
     def test_get_customer_churn_rate(self):
         y = np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 1])
 
-        self.assertEqual(get_customer_churn_rate(y), 0.9)
+        self.assertEqual(get_customer_churn_rate(y), 0.1)
 
     def test_get_RFM_data(self):
         dummy_customer_info = {
