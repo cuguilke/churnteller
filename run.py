@@ -13,6 +13,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter)
     parser.add_argument("--model", default="xgboost", help="supported models: (1) xgboost, (2) svm")
     parser.add_argument("--features", default="RFM", help="supported features for churn prediction: (1) RFM, (2) custom")
+    parser.add_argument("--n_splits", default=10, help="# of fold for final performance measurement")
     parser.add_argument("--order_data_path", default="./data/machine_learning_challenge_order_data.csv.gz")
     parser.add_argument("--label_data_path", default="./data/machine_learning_challenge_labeled_data.csv.gz")
     parser.add_argument("--parameter_path", default="parameters.json")
@@ -24,6 +25,7 @@ if __name__ == '__main__':
     args = vars(parser.parse_args())
     model = args["model"]
     features = args["features"]
+    n_splits = args["n_splits"]
     order_data_path = args["order_data_path"]
     label_data_path = args["label_data_path"]
     parameter_path = args["parameter_path"]
@@ -41,10 +43,10 @@ if __name__ == '__main__':
 
     # Feature extraction
     if features == "RFM":
-        x, y, x_test, y_test = get_RFM_data(customer_info, final_test=not do_grid_search)
+        x, y = get_RFM_data(customer_info, final_test=not do_grid_search)
 
     elif features == "custom":
-        x, y, x_test, y_test = get_custom_data(customer_info, final_test=not do_grid_search)
+        x, y = get_custom_data(customer_info, final_test=not do_grid_search)
 
     else:
         raise ValueError("%s is not a supported feature" % features)
@@ -54,24 +56,24 @@ if __name__ == '__main__':
     if do_normalize:
         scaler = StandardScaler()
         x = scaler.fit_transform(x)
-        x_test = x_test if type(x_test) is list else scaler.fit_transform(x_test)
         log("Features are normalized...")
-
-    # Prepare the classifier
-    if model == "xgboost":
-        estimator = xgboost.XGBClassifier(objective="binary:logistic", seed=13, use_label_encoder=False, eval_metric="logloss")
-
-    elif model == "svm":
-        estimator = SVC()
-
-    else:
-        raise ValueError("%s is not a supported model" % model)
-    log("Model is initialized...")
 
     # Get parameters (best | grid search)
     parameters = get_parameters(model, features, do_normalize, use_best=not do_grid_search, path=parameter_path)
 
     if do_grid_search:
+        # Prepare the classifier
+        if model == "xgboost":
+            estimator = xgboost.XGBClassifier(objective="binary:logistic", seed=13, use_label_encoder=False,
+                                              eval_metric="logloss")
+
+        elif model == "svm":
+            estimator = SVC()
+
+        else:
+            raise ValueError("%s is not a supported model" % model)
+        log("Model is initialized...")
+
         # Grid search for the hyperparameters
         grid_search = GridSearchCV(estimator=estimator,
                                    param_grid=parameters,
@@ -91,23 +93,58 @@ if __name__ == '__main__':
 
     else:
         # Set the recorded best parameters
-        estimator.set_params(**parameters)
         log("The parameter storage is used to load the best performing setting...")
+        log("%s-fold CV is being prepared..." % n_splits)
 
-        # Training
-        log("Training starts...")
-        estimator.fit(x, y)
-        log("Model training is completed.")
+        acc_list = np.zeros(n_splits, dtype="float32")
+        recall_list = np.zeros(n_splits, dtype="float32")
+        precision_list = np.zeros(n_splits, dtype="float32")
+        f1_score_list = np.zeros(n_splits, dtype="float32")
+        for i, ((x_train, y_train), (x_test, y_test)) in enumerate(get_train_val_split(x, y, n_splits=n_splits)):
 
-        # Testing
-        y_pred = estimator.predict(x_test)
-        acc = accuracy_score(y_test, y_pred)
-        recall = recall_score(y_test, y_pred)
-        precision = precision_score(y_test, y_pred)
-        f1_score = f1_score(y_test, y_pred)
-        log("%s:%s test acc: %.2f, recall: %.2f, precision: %.2f, f1 score: %.2f" % (model, features, acc, recall, precision, f1_score))
-        log("Customer churn rate: %.2f" % get_customer_churn_rate(y_test))
+            # Prepare the classifier
+            if model == "xgboost":
+                estimator = xgboost.XGBClassifier(objective="binary:logistic", seed=13, use_label_encoder=False, eval_metric="logloss")
 
-        # Record experiment results
-        record_results(model, features, do_normalize, {"acc": acc, "recall": recall, "precision": precision, "f1_score": f1_score})
-        log("Empirical results are recorded.")
+            elif model == "svm":
+                estimator = SVC()
+
+            else:
+                raise ValueError("%s is not a supported model" % model)
+            log("Fold#%s - Model is initialized..." % i)
+
+            estimator.set_params(**parameters)
+
+            # Training
+            log("Fold#%s - Training starts..." % i)
+            estimator.fit(x_train, y_train)
+            log("Fold#%s - Model training is completed." % i)
+
+            # Testing
+            y_pred = estimator.predict(x_test)
+            acc = accuracy_score(y_test, y_pred)
+            recall = recall_score(y_test, y_pred)
+            precision = precision_score(y_test, y_pred)
+            f1 = f1_score(y_test, y_pred)
+            log("Fold#%s - %s:%s test acc: %.2f, precision: %.2f, recall: %.2f, f1 score: %.2f" % (i, model, features, acc, precision, recall, f1))
+            log("Fold#%s - Customer churn rate: %.2f" % (i, get_customer_churn_rate(y_test)))
+
+            # Record experiment results
+            record_results(model, features, do_normalize, {"acc": acc, "recall": recall, "precision": precision, "f1_score": f1})
+            log("Fold#%s - Empirical results are recorded." % i)
+
+            # Accumulate results
+            acc_list[i] = acc
+            recall_list[i] = recall
+            precision_list[i] = precision
+            f1_score_list[i] = f1
+
+        # Final results
+        log("Final results:")
+        log("-------------")
+        avg_acc, std_acc = np.mean(acc_list), np.std(acc_list)
+        avg_recall, std_recall = np.mean(recall_list), np.std(recall_list)
+        avg_precision, std_precision = np.mean(precision_list), np.std(precision_list)
+        avg_f1_score, std_f1_score = np.mean(f1_score_list), np.std(f1_score_list)
+        log("%s:%s test acc: %.2f ± %.2f, precision: %.2f ± %.2f, recall: %.2f ± %.2f, f1 score: %.2f ± %.2f" % (model, features, avg_acc, std_acc, avg_precision, std_precision, avg_recall, std_recall, avg_f1_score, std_f1_score))
+

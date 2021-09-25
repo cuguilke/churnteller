@@ -62,37 +62,6 @@ def get_RFM_data(customer_info, final_test=False):
     x = []
     y = []
 
-    # Use the last 6 months for cross-validation
-    threshold_date = LAST_DATE - timedelta(days=180)
-
-    for customer in customer_info:
-        temp = []
-        last_order_date = MIN_DATE
-        for entry in customer_info[customer]["data"]:
-            new_label = 1
-
-            order_date = datetime.strptime(entry["order_date"], DATE_FORMAT)
-            if order_date <= threshold_date:
-
-                # Ignore failed orders
-                if entry["is_failed"] == 0:
-                    temp.append(entry["amount_paid"])
-                    last_order_date = max(last_order_date, order_date)
-
-            else:
-                new_label = 0
-
-        # Eliminate customers that made their first order in the last 6 months
-        if last_order_date > MIN_DATE:
-            x.append([(threshold_date - last_order_date).days, sum(temp), len(temp)])
-            y.append(new_label)
-
-    # List to numpy array
-    x = np.array(x).astype("float32")
-    y = np.array(y)
-
-    x_test = []
-    y_test = []
     if final_test:
         for customer in customer_info:
             temp = []
@@ -105,13 +74,40 @@ def get_RFM_data(customer_info, final_test=False):
                     temp.append(entry["amount_paid"])
                     last_order_date = max(last_order_date, order_date)
 
-            x_test.append([(LAST_DATE - last_order_date).days, sum(temp), len(temp)])
-            y_test.append(customer_info[customer]["label"])
+            x.append([(LAST_DATE - last_order_date).days, sum(temp), len(temp)])
+            y.append(customer_info[customer]["label"])
 
-        x_test = np.array(x_test).astype("float32")
-        y_test = np.array(y_test)
+    else:
+        # Use the last 6 months for cross-validation
+        threshold_date = LAST_DATE - timedelta(days=180)
 
-    return x, y, x_test, y_test
+        for customer in customer_info:
+            temp = []
+            last_order_date = MIN_DATE
+            for entry in customer_info[customer]["data"]:
+                new_label = 1
+
+                order_date = datetime.strptime(entry["order_date"], DATE_FORMAT)
+                if order_date <= threshold_date:
+
+                    # Ignore failed orders
+                    if entry["is_failed"] == 0:
+                        temp.append(entry["amount_paid"])
+                        last_order_date = max(last_order_date, order_date)
+
+                else:
+                    new_label = 0
+
+            # Eliminate customers that made their first order in the last 6 months
+            if last_order_date > MIN_DATE:
+                x.append([(threshold_date - last_order_date).days, sum(temp), len(temp)])
+                y.append(new_label)
+
+    # List to numpy array
+    x = np.array(x).astype("float32")
+    y = np.array(y)
+
+    return x, y
 
 def get_custom_data(customer_info, final_test=False):
     """
@@ -130,50 +126,6 @@ def get_custom_data(customer_info, final_test=False):
     platform_IDs = {30231: 0, 30359: 1, 29463: 2, 29815: 3, 30423: 4, 30391: 5, 29495: 6, 525: 7, 29751: 8, 30199: 9, 30135: 10, 22263: 11, 22167: 12, 22295: 13}
     transmission_IDs = {4356: 0, 4324: 1, 4228: 2, 4260: 3, 4196: 4, 212: 5, 4996: 6, 21124: 7, 1988: 8, 2020: 9}
 
-    # Use the last 6 months for cross-validation
-    threshold_date = LAST_DATE - timedelta(days=180)
-
-    for customer in customer_info:
-        temp = []
-        total_voucher = 0
-        payment_freq = [0] * 5
-        platform_freq = [0] * 14
-        tranmission_freq = [0] * 10
-
-        last_order_date = MIN_DATE
-        for entry in customer_info[customer]["data"]:
-            new_label = 1
-
-            order_date = datetime.strptime(entry["order_date"], DATE_FORMAT)
-            if order_date <= threshold_date:
-
-                # Ignore failed orders
-                if entry["is_failed"] == 0:
-                    temp.append(entry["amount_paid"])
-                    total_voucher += entry["voucher_amount"]
-                    payment_freq[payment_IDs[entry["payment_id"]]] += 1
-                    platform_freq[platform_IDs[entry["platform_id"]]] += 1
-                    tranmission_freq[transmission_IDs[entry["transmission_id"]]] += 1
-                    last_order_date = max(last_order_date, order_date)
-
-            else:
-                new_label = 0
-
-        # Eliminate customers that made their first order in the last 6 months
-        if last_order_date > MIN_DATE:
-            feature_vector = [(threshold_date - last_order_date).days, sum(temp), len(temp), total_voucher]
-            feature_vector.extend(payment_freq)
-            feature_vector.extend(platform_freq)
-            feature_vector.extend(tranmission_freq)
-            x.append(feature_vector)
-            y.append(new_label)
-
-    # List to numpy array
-    x = np.array(x).astype("float32")
-    y = np.array(y)
-
-    x_test = []
-    y_test = []
     if final_test:
         for customer in customer_info:
             temp = []
@@ -201,13 +153,56 @@ def get_custom_data(customer_info, final_test=False):
                 feature_vector.extend(payment_freq)
                 feature_vector.extend(platform_freq)
                 feature_vector.extend(tranmission_freq)
-                x_test.append(feature_vector)
-                y_test.append(customer_info[customer]["label"])
+                x.append(feature_vector)
+                y.append(customer_info[customer]["label"])
 
-        x_test = np.array(x_test).astype("float32")
-        y_test = np.array(y_test)
+        x = np.array(x).astype("float32")
+        y = np.array(y)
 
-    return x, y, x_test, y_test
+    else:
+        # Use the last 6 months for cross-validation
+        threshold_date = LAST_DATE - timedelta(days=180)
+
+        for customer in customer_info:
+            temp = []
+            total_voucher = 0
+            payment_freq = [0] * 5
+            platform_freq = [0] * 14
+            tranmission_freq = [0] * 10
+
+            last_order_date = MIN_DATE
+            for entry in customer_info[customer]["data"]:
+                new_label = 1
+
+                order_date = datetime.strptime(entry["order_date"], DATE_FORMAT)
+                if order_date <= threshold_date:
+
+                    # Ignore failed orders
+                    if entry["is_failed"] == 0:
+                        temp.append(entry["amount_paid"])
+                        total_voucher += entry["voucher_amount"]
+                        payment_freq[payment_IDs[entry["payment_id"]]] += 1
+                        platform_freq[platform_IDs[entry["platform_id"]]] += 1
+                        tranmission_freq[transmission_IDs[entry["transmission_id"]]] += 1
+                        last_order_date = max(last_order_date, order_date)
+
+                else:
+                    new_label = 0
+
+            # Eliminate customers that made their first order in the last 6 months
+            if last_order_date > MIN_DATE:
+                feature_vector = [(threshold_date - last_order_date).days, sum(temp), len(temp), total_voucher]
+                feature_vector.extend(payment_freq)
+                feature_vector.extend(platform_freq)
+                feature_vector.extend(tranmission_freq)
+                x.append(feature_vector)
+                y.append(new_label)
+
+    # List to numpy array
+    x = np.array(x).astype("float32")
+    y = np.array(y)
+
+    return x, y
 
 
 
