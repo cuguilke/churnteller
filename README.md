@@ -25,6 +25,7 @@ pip install -r requirements.txt
 
 - `model`: XGBoost or SVM
 - `features`: RFM (Recency, Frequency, Monetary model) or custom (includes payment, platform, and transmission type frequencies)
+- `n_splits`: the number of folds for the final cross-validation results
 - `normalize`: to enable feature normalization (needed for SVM trainings)
 - `grid_search`: to run grid search to find out optimal hyperparameters using 10 fold CV
 - `print_config`: to print out the selected configuration
@@ -68,38 +69,39 @@ python -m unittest discover -s test
 
 ## Experiments
 
-- RFM data model (Bult & Wansbeek, 1995): SVM cannot learn from this model without normalization (unlike XGBoost)
+- RFM data model (Bult & Wansbeek, 1995): SVM is worse than XGBoost for all metrics
 
 |         |  Acc | Precision | Recall | F1-score |
 |---------|:----:|:---------:|:------:|:--------:|
-| SVM     | 0.29 |    0.71   |  0.13  |   0.23   |
-| XGBoost | 0.83 |    0.85   |  0.95  |   0.90   |
+| SVM     | 0.71 ± 0.14 |    0.78 ± 0.02   |  0.86 ± 0.25  |   0.79 ± 0.19   |
+| XGBoost | 0.84 ± 0.00 |    0.85 ± 0.00   |  0.96 ± 0.00  |   0.90 ± 0.00   |
 
-- Normalized RFM data model: SVM becaomes competitive with XGBoost after feature normalization
-
-|         |  Acc | Precision | Recall | F1-score |
-|---------|:----:|:---------:|:------:|:--------:|
-| SVM     | 0.80 |    0.80   |  0.99  |   0.88   |
-| XGBoost | 0.83 |    0.84   |  0.96  |   0.90   |
-
-- Custom data model: includes payment, platform, transmission type frequency per customer
+- Normalized RFM data model: SVM performance suffers after feature normalization
 
 |         |  Acc | Precision | Recall | F1-score |
 |---------|:----:|:---------:|:------:|:--------:|
-| SVM     | 0.77 |    0.78   |  0.97  |   0.87   |
-| XGBoost | 0.84 |    0.85   |  0.96  |   0.90   |
+| SVM     | 0.63 ± 0.13 |    0.77 ± 0.03   |  0.73 ± 0.18  |   0.74 ± 0.11   |
+| XGBoost | 0.84 ± 0.00 |    0.85 ± 0.00   |  0.96 ± 0.00  |   0.90 ± 0.00   |
 
-- Normalized custom data model
+- Custom data model: (includes payment, platform, transmission type frequency per customer) SVM cannot learn with these features without normalization 
 
 |         |  Acc | Precision | Recall | F1-score |
 |---------|:----:|:---------:|:------:|:--------:|
-| SVM     | 0.80 |    0.82   |  0.95  |   0.88   |
-| XGBoost | 0.84 |    0.85   |  0.96  |   0.90   |
+| SVM     | 0.38 ± 0.08 |    0.77 ± 0.04   |  0.28 ± 0.10 |   0.41 ± 0.10  |
+| XGBoost | 0.84 ± 0.00 |    0.85 ± 0.00   |  0.96 ± 0.00 |   0.90 ± 0.00  |
+
+- Normalized custom data model: SVM results are fixed after feature normalization and it became competitive with XGBoost
+
+|         |  Acc | Precision | Recall | F1-score |
+|---------|:----:|:---------:|:------:|:--------:|
+| SVM     | 0.80 ± 0.00 |    0.82 ± 0.01  |  0.95 ± 0.01 |   0.88 ± 0.00  |
+| XGBoost | 0.84 ± 0.00 |    0.85 ± 0.00  |  0.96 ± 0.00 |   0.90 ± 0.00  |
 
 ## Results
 
 - Customer churn rate for this dataset is 77%, due to the this imbalance, the test accuracy itself may give a false impression about the predictive performance.
 - XGBoost has high recall (important since we want to predict customer churn beforehand to prevent them from leaving) and high precision (meaningful alerts regarding customer likelihood to leave the platform) acroos different data models. 
+- XGBoost has quite robust performance across different features/normalization schemes.
 - In addition, training XGBoost has significantly lower computational cost than that of SVM. Hence, one can perform extensive grid search for optimal hyperparameters.
 - The best solution can be reproduced using this command:
 
