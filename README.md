@@ -100,7 +100,7 @@ python -m unittest discover -s test
 ## Results
 
 - Customer churn rate for this dataset is 77%, due to the this imbalance, the test accuracy itself may give a false impression about the predictive performance.
-- XGBoost has high recall (important since we want to predict customer churn beforehand to prevent them from leaving) and high precision (meaningful alerts regarding customer likelihood to leave the platform) acroos different data models. 
+- XGBoost has high recall (important since we want to predict customer churn beforehand to prevent them from leaving) and high precision (meaningful alerts regarding customer likelihood to leave the platform) across different data models. 
 - XGBoost has quite robust performance across different features/normalization schemes.
 - In addition, training XGBoost has significantly lower computational cost than that of SVM. Hence, one can perform extensive grid search for optimal hyperparameters.
 - The best solution can be reproduced using this command:
